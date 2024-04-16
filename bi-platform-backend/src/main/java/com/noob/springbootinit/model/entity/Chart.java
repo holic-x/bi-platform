@@ -3,50 +3,68 @@ package com.noob.springbootinit.model.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.util.Date;
 import lombok.Data;
 
 /**
- * 用户
- *
+ * 图表信息表
+ * @TableName chart
  */
-@TableName(value = "user")
+@TableName(value ="chart")
 @Data
-public class User implements Serializable {
-
+public class Chart implements Serializable {
     /**
      * id
      */
-    @TableId(type = IdType.ASSIGN_ID)
+    @TableId(type = IdType.AUTO)
     private Long id;
 
     /**
-     * 账号
+     * 分析目标
      */
-    private String userAccount;
+    private String goal;
 
     /**
-     * 密码
+     * 图表名称
      */
-    private String userPassword;
+    private String name;
 
     /**
-     * 用户昵称
+     * 图表数据
      */
-    private String userName;
+    private String chartData;
 
     /**
-     * 用户头像
+     * 图表类型
      */
-    private String userAvatar;
+    private String chartType;
 
     /**
-     * 用户角色：user/admin
+     * 生成的图表数据
      */
-    private String userRole;
+    private String genChart;
+
+    /**
+     * 生成的分析结论
+     */
+    private String genResult;
+
+    /**
+     * wait,running,succeed,failed
+     */
+    private String status;
+
+    /**
+     * 执行信息
+     */
+    private String execMessage;
+
+    /**
+     * 创建用户 id
+     */
+    private Long userId;
 
     /**
      * 创建时间
@@ -61,7 +79,6 @@ public class User implements Serializable {
     /**
      * 是否删除
      */
-    @TableLogic
     private Integer isDelete;
 
     @TableField(exist = false)
