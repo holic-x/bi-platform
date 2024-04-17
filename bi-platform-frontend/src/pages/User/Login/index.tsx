@@ -155,8 +155,8 @@ const Login: React.FC = () => {
             maxWidth: '75vw',
           }}
           logo={<img alt="logo" src="/logo.svg" />}
-          title="Ant Design"
-          subTitle={'Ant Design 是西湖区最具影响力的 Web 设计规范'}
+          title="Noob智能BI平台"
+          subTitle={'基于React + Spring Boot + MQ + AIGC的智能数据分析平台'}
           initialValues={{
             autoLogin: true,
           }}
