@@ -16,6 +16,12 @@ export default [
     ],
   },
   { name: '查询表格', icon: 'table', path: '/list', component: './TableList' },
-  { path: '/', redirect: '/welcome' },
+
+  // { path: '/', redirect: '/welcome' },
+
+  { path: '/', redirect: '/add_chart' },
+  { name: '添加图表', icon: 'table', path: '/add_chart', component: './AddChart' },
+
+
   { path: '*', layout: false, component: './404' },
 ];
