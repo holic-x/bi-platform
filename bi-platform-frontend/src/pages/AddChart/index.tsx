@@ -1,11 +1,10 @@
-import { Footer } from '@/components';
 
-import { listChartByPageUsingPost } from '@/services/noob-bi/chartController';
+import { genChartByAiUsingPost, listChartByPageUsingPost } from '@/services/noob-bi/chartController';
 
 import { useModel } from '@umijs/max';
-import React, { useEffect,useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
-import { InboxOutlined, UploadOutlined } from '@ant-design/icons';
+import { UploadOutlined } from '@ant-design/icons';
 import {
   Button,
   Form,
@@ -13,6 +12,7 @@ import {
   Select,
   Space,
   Upload,
+  message
 } from 'antd';
 import TextArea from 'antd/es/input/TextArea';
 
@@ -28,8 +28,26 @@ const AddChart: React.FC = () => {
     })
   });
 
-  const onFinish = (values: any) => {
+  const onFinish = async (values: any) => {
     console.log('Received values of form: ', values);
+  
+    // 对接后端，上传数据
+    const params = {
+      ...values,
+      file: undefined,
+    };
+    try {
+      // 获取到上传的原始数据并传入后端接口
+      const res = await genChartByAiUsingPost(params, {}, values.file.file.originFileObj);
+      // 一般情况下没有返回值为分析失败，有则认为成功
+      if (!res?.data) {
+        message.error('分析失败');
+      } else {
+        message.success('分析成功');
+      }
+    } catch (e: any) {
+      message.error('分析失败，' + e.message);
+    }
   };
 
   return (
@@ -80,7 +98,7 @@ const AddChart: React.FC = () => {
           label="原始数据"
         >
           {/* action：文件上传之后 调用后台接口  action="/upload.do" */}
-          <Upload name="file"  listType="picture">
+          <Upload name="file">
             <Button icon={<UploadOutlined />}>上传CSV文件</Button>
           </Upload>
         </Form.Item>
