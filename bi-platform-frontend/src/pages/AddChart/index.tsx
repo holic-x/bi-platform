@@ -9,6 +9,7 @@ import { InboxOutlined, UploadOutlined } from '@ant-design/icons';
 import {
   Button,
   Form,
+  Input,
   Select,
   Space,
   Upload,
@@ -43,39 +44,53 @@ const AddChart: React.FC = () => {
         style={{ maxWidth: 600 }}
       >
 
-        <Form.Item name="rate" label="Rate">
-          <TextArea />
+        {/* 前端表单的name属性对应后端接口请求参数的字段，name对应goal，label为左侧提示文本，rules=....是必填项提示 */}
+
+        <Form.Item name="goal" label="分析目标" rules={[{required:true,message:"请输入分析目标"}]}>
+          {/* placeholder文本框提示语 */}
+          <TextArea placeholder="请输入分析需求，例如：分析网站用户的增长情况"/>
         </Form.Item>
 
-        <Form.Item
-          name="select"
-          label="Select"
-          hasFeedback
-          rules={[{ required: true, message: 'Please select your country!' }]}
-        >
-          <Select placeholder="Please select a country">
-            <Option value="china">China</Option>
-            <Option value="usa">U.S.A</Option>
-          </Select>
+        {/* 图表名称 */}
+        <Form.Item name="name" label="图表名称">
+          {/* placeholder文本框提示语 */}
+          <Input placeholder="请输入分析需求，例如：分析网站用户的增长情况"/>
         </Form.Item>
 
+
+        {/* 图表类型非必填，不做校验 */}
         <Form.Item
-          name="upload"
-          label="Upload"
-          valuePropName="fileList"
-          extra="longgggggggggggggggggggggggggggggggggg"
+          name="selchartTypeect"
+          label="图表类型"
         >
-          <Upload name="logo" action="/upload.do" listType="picture">
-            <Button icon={<UploadOutlined />}>Click to upload</Button>
+          <Select placeholder="请选择图表类型"
+            options={[
+              {value:'折线图',label:'折线图'},
+              {value:'柱状图',label:'柱状图'},
+              {value:'堆叠图',label:'堆叠图'},
+              {value:'饼图',label:'饼图'},
+              {value:'雷达图',label:'雷达图'},
+            ]}
+          />
+        </Form.Item>
+
+        {/* 文件上传 */}
+        <Form.Item
+          name="file"
+          label="原始数据"
+        >
+          {/* action：文件上传之后 调用后台接口  action="/upload.do" */}
+          <Upload name="file"  listType="picture">
+            <Button icon={<UploadOutlined />}>上传CSV文件</Button>
           </Upload>
         </Form.Item>
 
         <Form.Item wrapperCol={{ span: 12, offset: 6 }}>
           <Space>
             <Button type="primary" htmlType="submit">
-              Submit
+              提交
             </Button>
-            <Button htmlType="reset">reset</Button>
+            <Button htmlType="reset">重置</Button>
           </Space>
         </Form.Item>
       </Form>
