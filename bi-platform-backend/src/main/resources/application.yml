@@ -99,3 +99,9 @@ knife4j:
         api-rule: package
         api-rule-resources:
           - com.noob.springbootinit.controller
+
+# 鱼聪明 AI 配置（https://yucongming.com/）
+yuapi:
+  client:
+    access-key: krosrjm0yx4covzxxq2kwftpnwgaz3b9
+    secret-key: ckasze30hh5uptn7bz3qx6hibw7eo0vs

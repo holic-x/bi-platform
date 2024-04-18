@@ -16,6 +16,7 @@ import com.noob.springbootinit.constant.FileConstant;
 import com.noob.springbootinit.constant.UserConstant;
 import com.noob.springbootinit.exception.BusinessException;
 import com.noob.springbootinit.exception.ThrowUtils;
+import com.noob.springbootinit.manager.AiManager;
 import com.noob.springbootinit.model.dto.chart.ChartAddRequest;
 import com.noob.springbootinit.model.dto.chart.ChartEditRequest;
 import com.noob.springbootinit.model.dto.chart.ChartQueryRequest;
@@ -24,6 +25,7 @@ import com.noob.springbootinit.model.dto.file.UploadFileRequest;
 import com.noob.springbootinit.model.entity.Chart;
 import com.noob.springbootinit.model.entity.User;
 import com.noob.springbootinit.model.enums.FileUploadBizEnum;
+import com.noob.springbootinit.model.vo.BiResponse;
 import com.noob.springbootinit.model.vo.ChartVO;
 import com.noob.springbootinit.service.ChartService;
 import com.noob.springbootinit.service.UserService;
@@ -56,6 +58,9 @@ public class ChartController {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private AiManager aiManager;
 
     // region 增删改查
 
@@ -253,6 +258,60 @@ public class ChartController {
      * @return
      */
     @PostMapping("/upload")
+    public BaseResponse<BiResponse> genChartByAi(@RequestPart("file") MultipartFile multipartFile, GenChartByAiRequest genChartByAiRequest, HttpServletRequest request) {
+        String name = genChartByAiRequest.getName();
+        String goal = genChartByAiRequest.getGoal();
+        String chartType = genChartByAiRequest.getChartType();
+
+        // 校验
+        ThrowUtils.throwIf(StringUtils.isBlank(goal), ErrorCode.PARAMS_ERROR, "目标为空");
+        ThrowUtils.throwIf(StringUtils.isNotBlank(name) && name.length() > 100, ErrorCode.PARAMS_ERROR, "名称过长");
+
+        User loginUser = userService.getLoginUser(request);
+        long biModelId = CommonConstant.BI_MODEL_ID;
+
+        // 构造用户输入
+        StringBuilder userInput = new StringBuilder();
+        userInput.append("分析需求：").append("\n");
+
+        // 拼接分析目标
+        String userGoal = goal;
+        if (StringUtils.isNotBlank(chartType)) {
+            userGoal += "，请使用" + chartType;
+        }
+        userInput.append(userGoal).append("\n");
+        userInput.append("原始数据：").append("\n");
+        // 压缩后的数据
+        String csvData = ExcelUtils.excelToCsv(multipartFile);
+        userInput.append(csvData).append("\n");
+
+        String result = aiManager.doChat(biModelId, userInput.toString());
+        // 此处分隔符以设定为参考
+        String[] splits = result.split("【【【【【"); // 【【【【【
+        if (splits.length < 3) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "AI 生成错误");
+        }
+        String genChart = splits[1].trim();
+        String genResult = splits[2].trim();
+        // 插入到数据库
+        Chart chart = new Chart();
+        chart.setName(name);
+        chart.setGoal(goal);
+        chart.setChartData(csvData);
+        chart.setChartType(chartType);
+        chart.setGenChart(genChart);
+        chart.setGenResult(genResult);
+        chart.setUserId(loginUser.getId());
+        boolean saveResult = chartService.save(chart);
+        ThrowUtils.throwIf(!saveResult, ErrorCode.SYSTEM_ERROR, "图表保存失败");
+        BiResponse biResponse = new BiResponse();
+        biResponse.setGenChart(genChart);
+        biResponse.setGenResult(genResult);
+        biResponse.setChartId(chart.getId());
+        return ResultUtils.success(biResponse);
+    }
+
+    /*
     public BaseResponse<String> genChartByAi(@RequestPart("file") MultipartFile multipartFile, GenChartByAiRequest genChartByAiRequest, HttpServletRequest request) {
         String name = genChartByAiRequest.getName();
         String goal = genChartByAiRequest.getGoal();
@@ -264,7 +323,7 @@ public class ChartController {
 
         // 用户输入
         StringBuilder userInput = new StringBuilder();
-        userInput.append("数据分析ing");
+        userInput.append("你是一个数据分析师，接下来我会给你我的分析目标和原始数据，请告诉我分析结论。");
         userInput.append("分析目标：").append(goal).append("\n");
 
         // 压缩后的数据
@@ -272,7 +331,7 @@ public class ChartController {
         userInput.append("数据：").append(result).append("\n");
         return ResultUtils.success(userInput.toString());
     }
-
+     */
 
     /*
     public BaseResponse<String> genChartByAi(@RequestPart("file") MultipartFile multipartFile, GenChartByAiRequest genChartByAiRequest, HttpServletRequest request) {
