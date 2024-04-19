@@ -19,6 +19,7 @@ import com.noob.springbootinit.constant.UserConstant;
 import com.noob.springbootinit.exception.BusinessException;
 import com.noob.springbootinit.exception.ThrowUtils;
 import com.noob.springbootinit.manager.AiManager;
+import com.noob.springbootinit.manager.RedisLimiterManager;
 import com.noob.springbootinit.model.dto.chart.ChartAddRequest;
 import com.noob.springbootinit.model.dto.chart.ChartEditRequest;
 import com.noob.springbootinit.model.dto.chart.ChartQueryRequest;
@@ -61,8 +62,14 @@ public class ChartController {
     @Resource
     private UserService userService;
 
+    // ai服务
     @Resource
     private AiManager aiManager;
+
+    // 接口限流器
+    @Resource
+    private RedisLimiterManager redisLimiterManager;
+
 
     // region 增删改查
 
@@ -286,6 +293,10 @@ public class ChartController {
         // 获取当前登陆用户
         User loginUser = userService.getLoginUser(request);
         long biModelId = CommonConstant.BI_MODEL_ID;
+
+        // 引入限流判断
+        redisLimiterManager.doRateLimit("genChartByAi_"+loginUser.getId());
+
 
         // 构造用户输入
         StringBuilder userInput = new StringBuilder();
