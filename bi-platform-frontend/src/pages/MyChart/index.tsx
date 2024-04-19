@@ -107,6 +107,17 @@ const MyChart: React.FC = () => {
           itemLayout="vertical"
           size="large"
 
+          // 设置组件样式（栅栏格式）
+          grid={{
+            gutter: 16,
+            xs: 1,
+            sm: 1,
+            md: 1,
+            lg: 2,
+            xl: 2,
+            xxl: 2,
+          }}
+
           // 分页组件定义
           pagination={{
             // 当切换分页，在当前搜索条件的基础上，将页数调整为当前的页数
