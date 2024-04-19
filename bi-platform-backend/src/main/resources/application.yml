@@ -4,7 +4,7 @@ spring:
     name: bi-platform-backend
   # 默认 dev 环境
   profiles:
-    active: dev
+    active: remote
   # 支持 swagger3
   mvc:
     pathmatch:
@@ -24,12 +24,15 @@ spring:
     password: root
   # Redis 配置
   # todo 需替换配置，然后取消注释
-#  redis:
-#    database: 1
-#    host: localhost
-#    port: 6379
-#    timeout: 5000
+  redis:
+    database: 1
+    host: localhost
+    port: 6379
+    timeout: 5000
 #    password: 123456
+
+
+
   # Elasticsearch 配置
   # todo 需替换配置，然后取消注释
 #  elasticsearch:
@@ -105,3 +108,4 @@ yuapi:
   client:
     access-key: krosrjm0yx4covzxxq2kwftpnwgaz3b9
     secret-key: ckasze30hh5uptn7bz3qx6hibw7eo0vs
+

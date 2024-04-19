@@ -1,8 +1,10 @@
 package com.noob.springbootinit.controller;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Date;
 
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -17,6 +19,7 @@ import com.noob.springbootinit.constant.UserConstant;
 import com.noob.springbootinit.exception.BusinessException;
 import com.noob.springbootinit.exception.ThrowUtils;
 import com.noob.springbootinit.manager.AiManager;
+import com.noob.springbootinit.manager.RedisLimiterManager;
 import com.noob.springbootinit.model.dto.chart.ChartAddRequest;
 import com.noob.springbootinit.model.dto.chart.ChartEditRequest;
 import com.noob.springbootinit.model.dto.chart.ChartQueryRequest;
@@ -59,8 +62,14 @@ public class ChartController {
     @Resource
     private UserService userService;
 
+    // ai服务
     @Resource
     private AiManager aiManager;
+
+    // 接口限流器
+    @Resource
+    private RedisLimiterManager redisLimiterManager;
+
 
     // region 增删改查
 
@@ -267,8 +276,27 @@ public class ChartController {
         ThrowUtils.throwIf(StringUtils.isBlank(goal), ErrorCode.PARAMS_ERROR, "目标为空");
         ThrowUtils.throwIf(StringUtils.isNotBlank(name) && name.length() > 100, ErrorCode.PARAMS_ERROR, "名称过长");
 
+
+        /**
+         * 文件信息校验（校验文件后缀、大小等基本信息，防止文件上传漏洞攻击）
+         */
+        long size = multipartFile.getSize();
+        String originalFilename = multipartFile.getOriginalFilename();
+        // 校验文件大小，如果文件大于1兆则抛出异常，提示文件超过1M
+        final long ONE_MB = 1024 * 1024;
+        ThrowUtils.throwIf(size > ONE_MB, ErrorCode.PARAMS_ERROR,"文件超过1M");
+        // 检验文件后缀（一般是xxx.csv，获取到.后缀），可借助FileUtil工具类的getSuffix方法获取
+        String suffix = FileUtil.getSuffix(originalFilename);
+        final List<String> validFileSuffixList = Arrays.asList(".xlsx",".xls"); // ".png",".csv",".jpg",".svg","webp","jpeg"
+        ThrowUtils.throwIf(!validFileSuffixList.contains(suffix),ErrorCode.PARAMS_ERROR,"文件后缀格式非法");
+
+        // 获取当前登陆用户
         User loginUser = userService.getLoginUser(request);
         long biModelId = CommonConstant.BI_MODEL_ID;
+
+        // 引入限流判断
+        redisLimiterManager.doRateLimit("genChartByAi_"+loginUser.getId());
+
 
         // 构造用户输入
         StringBuilder userInput = new StringBuilder();
