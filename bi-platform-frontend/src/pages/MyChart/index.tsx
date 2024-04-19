@@ -102,6 +102,7 @@ const MyChart: React.FC = () => {
       </div>
 
 
+      <div className='margin-16'/>
       {/* 数据引入 */}
       <List
           itemLayout="vertical"
@@ -147,6 +148,7 @@ const MyChart: React.FC = () => {
               // key 对应图表id
               key={item.id}
               // 要展示的图表信息
+              /*
               extra={
                 <img
                   width={272}
@@ -154,19 +156,24 @@ const MyChart: React.FC = () => {
                   src="https://gw.alipayobjects.com/zos/rmsportal/mqaQswcyDLcXyDKnZfES.png"
                 />
               }
+              */
             >
               {/* 要展示的图表元素信息 */}
               <List.Item.Meta
                 // 头像（todo）
                 // avatar={<Avatar src={'https://cos.holic-x.com/profile/avatar/avatar02.png'} />}
                 avatar={<Avatar src={currentUser&&currentUser.userAvatar} />}
-                // 图表名称
+                // 图表名称(链接跳转查看详情)
                 title={<a href={item.href}>{item.name}</a>}
                 // 描述
                 description={item.chartType?'图表类型'+item.chartType:undefined}
               />
+              
+              <div style={{marginBottom:16}}></div>
+
               {/* 要展示的内容 */}
               {'分析目标：'+item.goal}
+              <div style={{marginBottom:16}}></div>
 
               {/* 图表信息展示 */}
               {/* <EChartsReact option={JSON.parse(item.genChart??'{}')} /> */}
