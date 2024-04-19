@@ -335,6 +335,7 @@ public class ChartController {
         CompletableFuture.runAsync(()->{
             // 2.1 修改图表任务状态为执行中
             Chart updatedChart = new Chart();
+            updatedChart.setId(chart.getId());
             updatedChart.setStatus("running");
             boolean updatedOp = chartService.updateById(updatedChart);
             if(!updatedOp){
