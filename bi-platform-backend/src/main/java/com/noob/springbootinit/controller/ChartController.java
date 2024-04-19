@@ -290,7 +290,7 @@ public class ChartController {
         ThrowUtils.throwIf(size > ONE_MB, ErrorCode.PARAMS_ERROR,"文件超过1M");
         // 检验文件后缀（一般是xxx.csv，获取到.后缀），可借助FileUtil工具类的getSuffix方法获取
         String suffix = FileUtil.getSuffix(originalFilename);
-        final List<String> validFileSuffixList = Arrays.asList(".xlsx",".xls"); // ".png",".csv",".jpg",".svg","webp","jpeg"
+        final List<String> validFileSuffixList = Arrays.asList("xlsx","xls"); // ".png",".csv",".jpg",".svg","webp","jpeg"
         ThrowUtils.throwIf(!validFileSuffixList.contains(suffix),ErrorCode.PARAMS_ERROR,"文件后缀格式非法");
 
         // 获取当前登陆用户

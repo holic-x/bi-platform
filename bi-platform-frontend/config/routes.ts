@@ -19,7 +19,8 @@ export default [
   // { path: '/', redirect: '/welcome' },
 
   { path: '/', redirect: '/add_chart' },
-  { name: '智能分析', icon: 'table', path: '/add_chart', component: './AddChart' },
+  { name: '智能分析（同步）', icon: 'table', path: '/add_chart', component: './AddChart' },
+  { name: '智能分析（异步）', icon: 'table', path: '/add_chart_async', component: './AddChartAsync' },
   { name: '我的图表', icon: 'pieChart', path: '/my_chart', component: './MyChart' },
 
 

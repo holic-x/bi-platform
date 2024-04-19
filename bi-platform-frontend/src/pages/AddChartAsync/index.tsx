@@ -2,33 +2,28 @@
 
 import React, { useState } from 'react';
 
-import { genChartByAiSyncUsingPost } from '@/services/noob-bi/chartController';
 import { UploadOutlined } from '@ant-design/icons';
 import {
   Button,
   Card,
-  Col,
-  Divider,
   Form,
   Input,
-  Row,
   Select,
   Space,
-  Spin,
   Upload,
   message
 } from 'antd';
+import { useForm } from 'antd/es/form/Form';
 import TextArea from 'antd/es/input/TextArea';
-import EChartsReact from 'echarts-for-react';
+import { genChartByAiAsyncUsingPost } from '@/services/noob-bi/chartController';
 
 
 
-const AddChart: React.FC = () => {
-  // 定义状态，接收后端返回值，实时展示在页面上
-  const [chart,setChart] = useState<API.BiResponse>();
-  const [option,setOption] = useState<any>();
+const AddChartAsync: React.FC = () => {
   // 提交中的状态，默认未提交
   const [submitting,setSubmitting] = useState<boolean>(false);
+
+  const [form] = useForm();
 
   /**
    * 提交
@@ -45,10 +40,6 @@ const AddChart: React.FC = () => {
     // 开始提交，将submitting设置为true
     setSubmitting(true);
 
-    // 如果提交了，则将图表数据和图表代码清空（避免和之前提交的图表堆叠）；如果option清空了则组件会触发重新渲染，不会保留之前的历史记录
-    setChart(undefined);
-    setOption(undefined);
-  
     // 对接后端，上传数据
     const params = {
       ...values,
@@ -56,22 +47,14 @@ const AddChart: React.FC = () => {
     };
     try {
       // 获取到上传的原始数据并传入后端接口
-      const res = await genChartByAiSyncUsingPost(params, {}, values.file.file.originFileObj);
+      const res = await genChartByAiAsyncUsingPost(params, {}, values.file.file.originFileObj);
       // 一般情况下没有返回值为分析失败，有则认为成功
       if (!res?.data) {
         message.error('分析失败');
       } else {
-        message.success('分析成功');
-        // 解析成对象，为空则设置为空字符串
-        const chartOption = JSON.parse(res.data.genChart??'');
-        // 如果为空，则抛出异常，提示图表代码解析错误
-        if(!chartOption){
-          throw new Error('图表代码解析错误');
-        }else{
-          // 解析成功，则将响应结果设置到图表中进行渲染
-          setChart(res.data);
-          setOption(chartOption);
-        }
+        message.success('分析任务提交成功，稍后请在【我的图表】页面查看');
+        // 提交成功，重置所有字段
+        form.resetFields();
       }
     } catch (e: any) {
       // 异常情况下，提示分析失败和具体的原因说明
@@ -83,13 +66,8 @@ const AddChart: React.FC = () => {
   };
 
   return (
-    // 页面展示美化
-
-
-    // 页面信息定义（add-chart）
-    <div className = "add-chart">
-      <Row gutter={24}>
-        <Col span={12}>
+    // 页面信息定义（add-chart-async）
+    <div className = "add-chart-async">
           <Card title="智能分析">
             <Form
               // 设定表单名称
@@ -151,24 +129,7 @@ const AddChart: React.FC = () => {
               </Form.Item>
             </Form>
             </Card>
-        </Col>
-
-        <Col span={12}>
-          <Card title="分析结论">
-            {chart?.genResult ?? <div>请先在左侧进行提交</div>}
-            <Spin spinning={submitting}/>
-          </Card>
-          <Divider />
-          <Card title="可视化图表">
-            {
-              option ? <EChartsReact option={option} /> : <div>请先在左侧进行提交</div>
-            }
-            <Spin spinning={submitting}/>
-          </Card>
-        </Col>
-      </Row>
-      
     </div>
   );
 };
-export default AddChart;
+export default AddChartAsync;
