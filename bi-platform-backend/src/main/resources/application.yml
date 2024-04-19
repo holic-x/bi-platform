@@ -4,7 +4,7 @@ spring:
     name: bi-platform-backend
   # 默认 dev 环境
   profiles:
-    active: dev
+    active: remote
   # 支持 swagger3
   mvc:
     pathmatch:

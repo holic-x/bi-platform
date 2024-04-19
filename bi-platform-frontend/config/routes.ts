@@ -19,7 +19,8 @@ export default [
   // { path: '/', redirect: '/welcome' },
 
   { path: '/', redirect: '/add_chart' },
-  { name: '添加图表', icon: 'table', path: '/add_chart', component: './AddChart' },
+  { name: '智能分析', icon: 'table', path: '/add_chart', component: './AddChart' },
+  { name: '我的图表', icon: 'pieChart', path: '/my_chart', component: './MyChart' },
 
 
   { path: '*', layout: false, component: './404' },
