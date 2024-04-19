@@ -1,9 +1,9 @@
 import { listChartByPageUsingPost } from '@/services/noob-bi/chartController';
-import { message,Avatar, List, Space } from 'antd';
-import {useModel} from '@@/exports';
+import { useModel } from '@@/exports';
+import { Avatar, List, Result, message } from 'antd';
+import Search from 'antd/es/input/Search';
 import EChartsReact from 'echarts-for-react';
 import React, { useEffect, useState } from 'react';
-import Search from 'antd/es/input/Search';
 
 const MyChart: React.FC = () => {
 
@@ -55,12 +55,15 @@ const MyChart: React.FC = () => {
           // 列表数据处理（有些图表有标题、有些没有，此处过滤掉不展示标题信息）
           if(res.data.records){
             res.data.records.forEach(data => {
-              // 将后端返回的图表字符串修改为对象数组，如果后端返回空字符串则返回{}
-              const chartOption = JSON.parse(data.genChart??'{}');
-              // 标题设置为undefined
-              chartOption.title = undefined;
-              // 将修改后的option重新赋值给原genChart字段
-              data.genChart = JSON.stringify(chartOption);
+              // 当图表状态为succeed的时候才解析图表代码（渲染数据）
+              if(data.status === 'succeed'){
+                // 将后端返回的图表字符串修改为对象数组，如果后端返回空字符串则返回{}
+                const chartOption = JSON.parse(data.genChart??'{}');
+                // 标题设置为undefined
+                chartOption.title = undefined;
+                // 将修改后的option重新赋值给原genChart字段
+                data.genChart = JSON.stringify(chartOption);
+              }
             });
           }
 
@@ -168,15 +171,53 @@ const MyChart: React.FC = () => {
                 description={item.chartType?'图表类型'+item.chartType:undefined}
               />
               
-              <div style={{marginBottom:16}}></div>
+              {/* <div style={{marginBottom:16}}></div> */}
 
               {/* 要展示的内容 */}
-              {'分析目标：'+item.goal}
-              <div style={{marginBottom:16}}></div>
+              {/* {'分析目标：'+item.goal} */}
+              {/* <div style={{marginBottom:16}}></div> */}
 
               {/* 图表信息展示 */}
               {/* <EChartsReact option={JSON.parse(item.genChart??'{}')} /> */}
-              <EChartsReact option={item.genChart&&JSON.parse(item.genChart)} />
+              {/* <EChartsReact option={item.genChart&&JSON.parse(item.genChart)} /> */}
+
+              <>
+                {
+                  item.status === 'wait' && <>
+                    <Result
+                      status="warning"
+                      title="待生成"
+                      subTitle={item.execMessage ?? '当前图表生成队列繁忙，请耐心等候'}
+                    />
+                  </>
+                }
+                {
+                  item.status === 'running' && <>
+                    <Result
+                      status="info"
+                      title="图表生成中"
+                      subTitle={item.execMessage}
+                    />
+                  </>
+                }
+                {
+                  item.status === 'succeed' && <>
+                    <div style={{ marginBottom: 16 }} />
+                    <p>{'分析目标：' + item.goal}</p>
+                    <div style={{ marginBottom: 16 }} />
+                    <EChartsReact option={item.genChart && JSON.parse(item.genChart)} />
+                  </>
+                }
+                {
+                  item.status === 'failed' && <>
+                    <Result
+                      status="error"
+                      title="图表生成失败"
+                      subTitle={item.execMessage}
+                    />
+                  </>
+                }
+              </>
 
             </List.Item>
           )}
