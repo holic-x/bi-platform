@@ -9,6 +9,7 @@ import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.noob.springbootinit.annotation.AuthCheck;
+import com.noob.springbootinit.bizmq.BiMessageProducer;
 import com.noob.springbootinit.common.BaseResponse;
 import com.noob.springbootinit.common.DeleteRequest;
 import com.noob.springbootinit.common.ErrorCode;
@@ -75,6 +76,10 @@ public class ChartController {
     // 异步处理线程池(自动注入一个线程池实例)
     @Resource
     private ThreadPoolExecutor threadPoolExecutor;
+
+    // 引入消息生产者
+    @Resource
+    private BiMessageProducer biMessageProducer;
 
 
     // region 增删改查
@@ -263,6 +268,83 @@ public class ChartController {
         queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC), sortField);
         return queryWrapper;
     }
+
+    /**
+     * 智能分析(MQ)
+     * @param multipartFile
+     * @param genChartByAiRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/genChartByAiAsyncMq")
+    public BaseResponse<BiResponse> genChartByAiAsyncMq(@RequestPart("file") MultipartFile multipartFile, GenChartByAiRequest genChartByAiRequest, HttpServletRequest request) {
+        String name = genChartByAiRequest.getName();
+        String goal = genChartByAiRequest.getGoal();
+        String chartType = genChartByAiRequest.getChartType();
+
+        // 校验
+        ThrowUtils.throwIf(StringUtils.isBlank(goal), ErrorCode.PARAMS_ERROR, "目标为空");
+        ThrowUtils.throwIf(StringUtils.isNotBlank(name) && name.length() > 100, ErrorCode.PARAMS_ERROR, "名称过长");
+
+        // 文件信息校验（校验文件后缀、大小等基本信息，防止文件上传漏洞攻击）
+        long size = multipartFile.getSize();
+        String originalFilename = multipartFile.getOriginalFilename();
+        // 校验文件大小，如果文件大于1兆则抛出异常，提示文件超过1M
+        final long ONE_MB = 1024 * 1024;
+        ThrowUtils.throwIf(size > ONE_MB, ErrorCode.PARAMS_ERROR,"文件超过1M");
+        // 检验文件后缀（一般是xxx.csv，获取到.后缀），可借助FileUtil工具类的getSuffix方法获取
+        String suffix = FileUtil.getSuffix(originalFilename);
+        final List<String> validFileSuffixList = Arrays.asList("xlsx","xls"); // ".png",".csv",".jpg",".svg","webp","jpeg"
+        ThrowUtils.throwIf(!validFileSuffixList.contains(suffix),ErrorCode.PARAMS_ERROR,"文件后缀格式非法");
+
+        // 获取当前登陆用户
+        User loginUser = userService.getLoginUser(request);
+        long biModelId = CommonConstant.BI_MODEL_ID;
+
+        // 引入限流判断
+        redisLimiterManager.doRateLimit("genChartByAi_"+loginUser.getId());
+
+        // 构造用户输入
+        StringBuilder userInput = new StringBuilder();
+        userInput.append("分析需求：").append("\n");
+
+        // 拼接分析目标
+        String userGoal = goal;
+        if (StringUtils.isNotBlank(chartType)) {
+            userGoal += "，请使用" + chartType;
+        }
+        userInput.append(userGoal).append("\n");
+        userInput.append("原始数据：").append("\n");
+        // 压缩后的数据
+        String csvData = ExcelUtils.excelToCsv(multipartFile);
+        userInput.append(csvData).append("\n");
+
+
+        // --------------------------------- start 异步处理逻辑 ------------------------------
+        // 1.先将图标数据保存到数据库中
+        Chart chart = new Chart();
+        chart.setName(name);
+        chart.setGoal(goal);
+        chart.setChartData(csvData);
+        chart.setChartType(chartType);
+        // 数据库插入时，还没生成结果（先插入数据，异步调用AI接口生成图表信息），将图表任务状态设置为排队中
+//        chart.setGenChart(genChart);
+//        chart.setGenResult(genResult);
+        chart.setStatus("wait");
+        chart.setUserId(loginUser.getId());
+        boolean saveResult = chartService.save(chart);
+        ThrowUtils.throwIf(!saveResult, ErrorCode.SYSTEM_ERROR, "图表保存失败");
+
+        // 2.在最终的返回结果前发送MQ消息
+        biMessageProducer.sendMessage(String.valueOf(chart.getId()));
+
+        // --------------------------------- end 异步处理逻辑 ------------------------------
+        BiResponse biResponse = new BiResponse();
+        biResponse.setChartId(chart.getId());
+        return ResultUtils.success(biResponse);
+    }
+
+
 
     /**
      * 智能分析（异步）

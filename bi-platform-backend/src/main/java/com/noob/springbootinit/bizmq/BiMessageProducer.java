@@ -6,14 +6,14 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 
 /**
- * @ClassName MyMessageProducer
+ * @ClassName BiMessageProducer
  * @Description TODO
  * @Author holic-x
  * @Date 2024 2024/4/20 17:30
  */
 // 标记该类为一个组件，让Spring能够扫描并将其纳入管理
 @Component
-public class MyMessageProducer {
+public class BiMessageProducer {
 
     // 注入RabbitTemplate
     @Resource
@@ -25,8 +25,8 @@ public class MyMessageProducer {
      * @param routingKey 路由键：指定消息根据什么路由规则转发到对应的队列
      * @param message 消息内容：要发送的消息
      */
-    public void sendMessage(String exchange, String routingKey, String message) {
-        rabbitTemplate.convertAndSend(exchange, routingKey, message);
+    public void sendMessage(String message) {
+        rabbitTemplate.convertAndSend(BiMqConstant.BI_EXCHANGE_NAME, BiMqConstant.BI_ROUTING_KEY, message);
     }
 
 }

@@ -1,11 +1,11 @@
 package com.noob.springbootinit.bizmq;
 
+import com.noob.springbootinit.test.mq.demo.MyMessageConsumer;
+import com.noob.springbootinit.test.mq.demo.MyMessageProducer;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.annotation.Resource;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @ClassName MyMessageTest

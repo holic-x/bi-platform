@@ -1,4 +1,4 @@
-package com.noob.springbootinit.bizmq;
+package com.noob.springbootinit.test.mq.demo;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
