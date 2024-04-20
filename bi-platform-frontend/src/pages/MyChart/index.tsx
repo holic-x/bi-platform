@@ -57,12 +57,18 @@ const MyChart: React.FC = () => {
             res.data.records.forEach(data => {
               // 当图表状态为succeed的时候才解析图表代码（渲染数据）
               if(data.status === 'succeed'){
+                // ----- 处理方式1：JSON格式处理（可能存在问题，生辰的option不一定满足json规范）
                 // 将后端返回的图表字符串修改为对象数组，如果后端返回空字符串则返回{}
                 const chartOption = JSON.parse(data.genChart??'{}');
                 // 标题设置为undefined
                 chartOption.title = undefined;
                 // 将修改后的option重新赋值给原genChart字段
                 data.genChart = JSON.stringify(chartOption);
+                
+
+                // ------ 处理方式2：不作任何处理，直接返回原有的字符串（因为option的规则不一定完全适配json格式）
+                // 将后端返回的图表字符串修改为对象数组，如果后端返回空字符串则返回{}
+
               }
             });
           }
@@ -205,7 +211,11 @@ const MyChart: React.FC = () => {
                     <div style={{ marginBottom: 16 }} />
                     <p>{'分析目标：' + item.goal}</p>
                     <div style={{ marginBottom: 16 }} />
+                    {/* 处理方式1：JSON格式处理 可能存在option json解析失败问题 */}
                     <EChartsReact option={item.genChart && JSON.parse(item.genChart)} />
+
+                    {/* 处理方式2：直接不作任何处理 */}
+                    {/* <EChartsReact option={item.genChart??'{}'} /> */}
                   </>
                 }
                 {
